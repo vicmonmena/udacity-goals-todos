@@ -1,40 +1,357 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="theme-color" content="#000000">
-    <!--
-      manifest.json provides metadata used when your web app is added to the
-      homescreen on Android. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json">
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+<head>
+  <title>Udacity (vicmonmena) Todos Goals</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+  <script src="https://unpkg.com/react@16.3.0-alpha.1/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@16.3.0-alpha.1/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+  <script src="https://tylermcginnis.com/goals-todos-api/index.js"></script>
+  <script src="https://unpkg.com/redux-thunk@2.2.0/dist/redux-thunk.min.js"></script>
+</head>
+<body>
+  <div id="app"> </div>
+  <script type="text/javascript">
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>
-      You need to enable JavaScript to run this app.
-    </noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+    // Generate a random and unique ID
+    function generateID() {
+      return Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36);
+    }
+    
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+    // Esta función es un REDUCER, porque lo que hace es coger un estado en una action y reducirlo a un nuevo estado.
+    // 'state = []' esto es de ES6
+    // Esta función es una PURE FUNCTION
+    function todos(state = [], action) {
+      switch (action.type) {
+        case ADD_TODO:
+          return state.concat([action.todo]); // brand new state  
+        case REMOVE_TODO:
+          return state.filter((todo) => todo.id !== action.id);
+        case TOOGLE_TODO:
+          return state.map((todo) => todo.id !== action.id ? todo : 
+            Object.assign({}, todo, { complete: !todo.complete }));
+        case RECEIVE_DATA:
+          return action.todos;
+        default: return state;
+      }
+    }
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+    // 2ND REDUCER
+    function goals(state = [], action) {
+      switch (action.type) {
+        case ADD_GOAL:
+          return state.concat([action.goal]); // brand new state  
+        case REMOVE_GOAL:
+          return state.filter((goal) => goal.id !== action.id);
+        case RECEIVE_DATA:
+          return action.goals;
+        default: return state;
+      }
+    }
+
+    // 3RD REDUCER
+    function loading(state = true, action) {
+      switch (action.type) {
+        case RECEIVE_DATA:
+          return false;
+        default: return state;
+      }
+    }
+
+    /**
+     * Middleware for intercept task related to bitcoins. 
+     *
+     */
+    const checker = (store) => (next) => (action) => {
+      if (action.type === ADD_TODO && action.todo.name.toLowerCase().includes('bitcoin')) {
+        return alert('Nope! That is a bad idea');
+      } 
+
+      if (action.type === ADD_GOAL && action.goal.name.toLowerCase().includes('bitcoin')) {
+        return alert('Nope! That is a bad idea');
+      } 
+
+      return next(action); 
+    }
+
+    /**
+     * This middleware shows messages on developer console browser
+     */
+     const logger = (store) => (next) => (action) => {
+      console.group(action.type)
+        console.log('[INFO] This action is ', action);
+        const result = next(action);
+        console.log('[INFO] The new state is ', store.getState());
+      console.groupEnd();
+
+      return result; 
+    }
+
+    /* ************************************************** */
+          /* **************** STORE ************* */
+    /* ************************************************** */
+    const store = Redux.createStore(Redux.combineReducers({
+      todos,
+      goals,
+      loading
+    }), Redux.applyMiddleware(ReduxThunk.default, checker, logger));
+    /* ************************************************** */
+
+    /**
+     * Event click function for adding todo
+     */
+    function addTodo() {
+      const input = document.getElementById('todo');
+      const name = input.value;
+      if ((name)) {
+        input.value = ''; // Reseting field after submit
+        // console.log('addTodo invoked with value: ', name)
+        const todo = {
+          id: generateID(),
+          name,
+          complete: false,
+          // now we are not gonna use field 'done'
+        };
+        store.dispatch(addTodoAction(todo));
+        
+      } else {
+        alert('Please, input can not be empty');
+      }
+    }
+
+    /**
+     * Event click function for adding goal
+     */
+    function addGoal() {
+      const input = document.getElementById('goal');
+      const name = input.value;
+      if((name)) {
+        input.value = ''; // Reseting field after submit
+        // console.log('addGoal invoked with value: ', name)
+        const goal = {
+          id: generateID(),
+          name,
+          // now we are not gonna use field 'done'
+        };
+        store.dispatch(addGoalAction(goal));
+        
+      } else {
+        alert('Please, input can not be empty');
+      }
+    }
+    
+    function createRemoveButton(handleOnClick) {
+      const removeBtn = document.createElement('button');
+      removeBtn.innerHTML = 'X'
+      removeBtn.addEventListener('click', handleOnClick);
+      return removeBtn;
+    }
+    /**
+     * This function add a todo element to the list (DOM)
+     */ 
+    function addTodoToDOM(todo) {
+      const node = document.createElement('li');
+      const text = document.createTextNode(todo.name);
+      const removeButton = createRemoveButton(() => {
+        store.dispatch(removeTodoAction(todo.id))
+      });
+      node.appendChild(text);
+      node.appendChild(removeButton)
+      node.setAttribute('id', todo.id);
+      // Showing element list in DOM
+      document.getElementById('todos').appendChild(node);
+      node.addEventListener('click', () => {
+        store.dispatch(toogleTodoAction(todo.id));
+      });
+      node.style.textDecoration = todo.complete ? 'line-through' : 'none';
+    }
+
+    /**
+     * This function add a goal element to the list (DOM)
+     */ 
+    function addGoalToDOM(goal) {
+      const node = document.createElement('li');
+      const text = document.createTextNode(goal.name);
+      const removeButton = createRemoveButton(() => {
+        store.dispatch(removeGoalAction(goal.id))
+      })
+      node.appendChild(text);
+      node.appendChild(removeButton);
+      node.setAttribute('id', goal.id);
+      // Showing element list in DOM
+      document.getElementById('goals').appendChild(node);
+    }
+  </script>
+  <script type="text/babel">
+    function List(props) {
+      return(
+        <ul id={props.id}>
+          {props.items.map(item => (
+            <li key={item.id}>
+              <span 
+                onClick={() => props.toogle && props.toogle(item)}
+                style={{textDecoration: item.complete ? 'line-through' : 'none'}}>
+                {item.name}
+              </span>
+              <button onClick={() => props.remove(item)}>
+              X
+              </button>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+    
+    class Todos extends React.Component {
+
+      addItem = (event) => {
+        event.preventDefault();
+        this.props.dispatch(handleAddTodo(this.input.value, () => this.input.value = ''));
+      }
+
+      removeItem = (todo) => {
+        this.props.dispatch(handleDeleteTodo(todo));
+      }
+
+      toogleItem = (todo) => {
+        this.props.dispatch(handleToogleTodo(todo));
+      }
+      render() {
+        return (
+          <div>
+            <h1>Todo List</h1>
+            <input 
+              type="input"
+              placeholder="Add Todo"
+              ref={(input) => this.input = input}
+            />
+            <button onClick={this.addItem}>Add todo</button>
+            <List 
+              id='todos'
+              toogle={this.toogleItem}
+              remove={this.removeItem} 
+              items={this.props.todos}
+            />
+          </div>
+        )
+      }
+    }
+
+    class ConnectedTodos extends React.Component {
+      render() {
+        return(
+          <Context.Consumer>
+            {(store) => {
+              const { todos } = store.getState();
+              return <Todos todos={todos} dispatch={store.dispatch} />
+            }}
+          </Context.Consumer>
+        )
+      }
+    }
+
+    class Goals extends React.Component {
+      
+      addItem = (event) => {
+        event.preventDefault();
+        this.props.dispatch(handleAddGoal(this.input.value, () => this.input.value = ''));
+      }
+
+      removeItem = (goal) => {
+        this.props.dispatch(handleDeleteGoal(goal));
+      }
+
+      render() {
+        return (
+          <div>
+            <h1>Goal List</h1>  
+            <input 
+              type="input"
+              placeholder="Add Goal"
+              ref={(input) => this.input = input}
+            />
+            <button onClick={this.addItem}>Add goal</button>
+            <List 
+              id='goals'
+              remove={this.removeItem} 
+              items={this.props.goals} 
+            />
+          </div>
+        )
+      }
+    }
+    
+    class ConnectedGoals extends React.Component {
+      render() {
+        return(
+          <Context.Consumer>
+            {(store) => {
+              const { goals } = store.getState();
+              return <Goals goals={goals} dispatch={store.dispatch} />
+            }}
+          </Context.Consumer>
+        )
+      }
+    }
+
+    class App extends React.Component {
+
+      componentDidMount() {
+        const { store } = this.props;
+        
+        // Initialing data from action creator thunk
+        store.dispatch(handleInitialData());
+        // forceUpdate: re-render of that specific component
+        store.subscribe(() => this.forceUpdate())
+      }
+
+      render() {
+        const { loading } = store.getState();
+        if (loading) {
+          return (
+            <h3>Loading data ...</h3>
+          )
+        } 
+        return(
+          <div>
+            <ConnectedTodos />
+            <ConnectedGoals />
+          </div>
+        )
+      }
+    }
+
+    class ConnectedApp extends React.Component {
+      render() {
+        return (
+          <Context.Consumer>
+            {(store) => (
+              <App store={store} />
+            )}
+          </Context.Consumer>
+        )
+      }
+    }
+  
+    const Context = React.createContext();
+
+    class Provider extends React.Component {
+      render() {
+        return (
+          <Context.Provider value={this.props.store}>
+            {this.props.children}
+          </Context.Provider>
+        )
+      }
+    }
+  
+    ReactDOM.render(
+      <Provider store={store}>
+        <ConnectedApp />
+      </Provider>,
+      document.getElementById('app')
+    );
+  </script>
+</body>
 </html>

@@ -17,47 +17,6 @@
     function generateID() {
       return Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36);
     }
-    
-
-    // Esta función es un REDUCER, porque lo que hace es coger un estado en una action y reducirlo a un nuevo estado.
-    // 'state = []' esto es de ES6
-    // Esta función es una PURE FUNCTION
-    function todos(state = [], action) {
-      switch (action.type) {
-        case ADD_TODO:
-          return state.concat([action.todo]); // brand new state  
-        case REMOVE_TODO:
-          return state.filter((todo) => todo.id !== action.id);
-        case TOOGLE_TODO:
-          return state.map((todo) => todo.id !== action.id ? todo : 
-            Object.assign({}, todo, { complete: !todo.complete }));
-        case RECEIVE_DATA:
-          return action.todos;
-        default: return state;
-      }
-    }
-
-    // 2ND REDUCER
-    function goals(state = [], action) {
-      switch (action.type) {
-        case ADD_GOAL:
-          return state.concat([action.goal]); // brand new state  
-        case REMOVE_GOAL:
-          return state.filter((goal) => goal.id !== action.id);
-        case RECEIVE_DATA:
-          return action.goals;
-        default: return state;
-      }
-    }
-
-    // 3RD REDUCER
-    function loading(state = true, action) {
-      switch (action.type) {
-        case RECEIVE_DATA:
-          return false;
-        default: return state;
-      }
-    }
 
     /**
      * Middleware for intercept task related to bitcoins. 

@@ -18,16 +18,6 @@
       return Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36);
     }
 
-    /* ************************************************** */
-          /* **************** STORE ************* */
-    /* ************************************************** */
-    const store = Redux.createStore(Redux.combineReducers({
-      todos,
-      goals,
-      loading
-    }), Redux.applyMiddleware(ReduxThunk.default, checker, logger));
-    /* ************************************************** */
-
     /**
      * Event click function for adding todo
      */
@@ -71,12 +61,16 @@
       }
     }
     
+    /**
+     * Onclick add a button for element delete 
+     * */
     function createRemoveButton(handleOnClick) {
       const removeBtn = document.createElement('button');
       removeBtn.innerHTML = 'X'
       removeBtn.addEventListener('click', handleOnClick);
       return removeBtn;
     }
+    
     /**
      * This function add a todo element to the list (DOM)
      */ 
@@ -112,15 +106,6 @@
       // Showing element list in DOM
       document.getElementById('goals').appendChild(node);
     }
-  </script>
-  <script type="text/babel">
-  
-    ReactDOM.render(
-      <Provider store={store}>
-        <ConnectedApp />
-      </Provider>,
-      document.getElementById('app')
-    );
   </script>
 </body>
 </html>

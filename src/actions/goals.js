@@ -39,12 +39,9 @@ export function handleAddGoal(goalName, cb) {
   return (dispatch) => {
     return API.saveGoal(goalName)
       .then((goal) => {
-        dispatch(addGoalgoal));
+        dispatch(addGoal(goal));
         cb(); // callback for UI modifications or other independant actions from this logic
-      }).catch((err) =>{
-        alert('An error occurred adding goal item. Please, try again');
-        cb();
-      });
+      }).catch(() => alert('An error occurred adding goal item. Please, try again'))
   }
 }
 

@@ -8,12 +8,9 @@ import { handleInitialData } from './../actions/shared';
 class App extends Component {
 
   componentDidMount() {
-    const { store } = this.props;
-    
+    const { dispatch } = this.props;
     // Initialing data from action creator thunk
-    store.dispatch(handleInitialData());
-    // forceUpdate: re-render of that specific component
-    store.subscribe(() => this.forceUpdate())
+    dispatch(handleInitialData());
   }
 
   render() {

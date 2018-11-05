@@ -52,7 +52,7 @@ export function handleAddTodo(todoName, cb) {
   return (dispatch) => {
     return API.saveTodo(todoName)
       .then((todo) => {
-        dispatch(addTodoAction(todo));
+        dispatch(addTodo(todo));
         cb();
       }).catch((err) =>{
         alert('An error occurred adding todo item. Please, try again');
